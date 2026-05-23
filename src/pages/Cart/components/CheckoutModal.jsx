@@ -5,6 +5,8 @@ import { FaTimes } from "react-icons/fa";
 import useCart from "../../../hooks/useCart";
 import { fetchDeliveryCharges } from "../../../services/googleSheets.service";
 import { calculateDeliveryCharge } from "../../../utils/deliveryCalculator";
+import { saveOrder } from "../../../services/order.service";
+import generateOrderId from "../../../utils/generateOrderId";
 
 const CheckoutModal = ({ closeModal }) => {
   const { cartItems, clearCart } = useCart();
@@ -18,6 +20,7 @@ const CheckoutModal = ({ closeModal }) => {
   });
   const [deliveryRates, setDeliveryRates] = useState([]);
   const [deliveryLoading, setDeliveryLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const subtotal = cartItems.reduce(
     (acc, item) =>
@@ -55,11 +58,51 @@ const CheckoutModal = ({ closeModal }) => {
     loadDeliveryRates();
   }, []);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (isSubmitting) {
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    const orderId = generateOrderId();
+    const orderData = {
+      orderId,
+      date: new Date().toLocaleString(),
+      customerName: formData.name,
+      phone: formData.phone,
+      address: formData.address,
+      city: formData.city,
+      pincode: formData.pincode,
+      products: cartItems
+        .map(
+          (item) =>
+            `${item.name} x ${item.quantity}`
+        )
+        .join(", "),
+      subtotal,
+      delivery: shipping,
+      total,
+    };
+
+    try {
+      await saveOrder(orderData);
+    } catch (error) {
+      console.error("Save order failed:", error);
+      alert(
+        "Unable to save order to the spreadsheet. Please try again."
+      );
+      setIsSubmitting(false);
+      return;
+    }
 
     let message =
       `🛒 *NEW ORDER* %0A%0A`;
+
+    message +=
+      `🆔 Order ID: ${orderId}%0A%0A`;
 
     cartItems.forEach((item) => {
       message +=
@@ -88,7 +131,6 @@ const CheckoutModal = ({ closeModal }) => {
     );
 
     clearCart();
-
     closeModal();
   };
 
@@ -224,9 +266,10 @@ const CheckoutModal = ({ closeModal }) => {
 
           <button
             type="submit"
-            className="rounded-full bg-yellow-700 py-5 text-lg font-bold text-white transition hover:bg-yellow-800"
+            disabled={isSubmitting}
+            className={`rounded-full py-5 text-lg font-bold text-white transition ${isSubmitting ? "bg-gray-400 cursor-not-allowed" : "bg-yellow-700 hover:bg-yellow-800"}`}
           >
-            Place Order
+            {isSubmitting ? "Placing order..." : "Place Order"}
           </button>
         </form>
       </div>
