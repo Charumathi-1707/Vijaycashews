@@ -1,4 +1,4 @@
 export const API = {
-  products: '/api/products',
-  orders: '/api/orders',
+  products: "/products",
+  orders: "/orders",
 };

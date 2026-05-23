@@ -1,3 +1,4 @@
 export const CONFIG = {
-  siteName: 'Cashews Shop',
+  whatsappNumber: "919751694905",
+  freeShippingAmount: 999,
 };

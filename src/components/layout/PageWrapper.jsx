@@ -1,3 +1,9 @@
-export default function PageWrapper({ children }) {
-  return <div className="page-wrapper">{children}</div>;
-}
+const PageWrapper = ({ children }) => {
+  return (
+    <div className="overflow-hidden">
+      {children}
+    </div>
+  );
+};
+
+export default PageWrapper;

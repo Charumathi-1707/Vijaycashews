@@ -1,3 +1,14 @@
-export default function MainLayout({ children }) {
-  return <div className="main-layout">{children}</div>;
-}
+import Navbar from "../components/layout/Navbar";
+import Footer from "../components/layout/Footer";
+
+const MainLayout = ({ children }) => {
+  return (
+    <>
+      <Navbar />
+      <main>{children}</main>
+      <Footer />
+    </>
+  );
+};
+
+export default MainLayout;

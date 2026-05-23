@@ -1,11 +1,9 @@
-import { useState, useEffect } from 'react';
+import products from "../data/products";
 
-export default function useProducts() {
-  const [products, setProducts] = useState([]);
+const useProducts = () => {
+  return {
+    products,
+  };
+};
 
-  useEffect(() => {
-    setProducts([]);
-  }, []);
-
-  return products;
-}
+export default useProducts;
