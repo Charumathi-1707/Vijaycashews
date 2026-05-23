@@ -1,12 +1,26 @@
 import Navbar from "../components/layout/Navbar";
 import Footer from "../components/layout/Footer";
 
-const MainLayout = ({ children }) => {
+import CartSidebar from "../pages/Cart/components/CartSidebar";
+
+const MainLayout = ({
+  children,
+}) => {
   return (
     <>
+      {/* Navbar */}
       <Navbar />
-      <main>{children}</main>
+
+      {/* Main Content */}
+      <main>
+        {children}
+      </main>
+
+      {/* Footer */}
       <Footer />
+
+      {/* Global Cart Sidebar */}
+      <CartSidebar />
     </>
   );
 };

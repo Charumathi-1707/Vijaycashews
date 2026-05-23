@@ -1,19 +1,27 @@
 const navigation = [
   {
     label: "Home",
-    href: "#home",
+    path: "/",
   },
+
   {
     label: "Products",
-    href: "#products",
+    path: "/products",
   },
+
   {
-    label: "Quality",
-    href: "#quality",
+    label: "About",
+    path: "/about",
   },
+
   {
-    label: "Reviews",
-    href: "#reviews",
+    label: "Testimonials",
+    path: "/testimonials",
+  },
+
+  {
+    label: "Contact",
+    path: "/contact",
   },
 ];
 
