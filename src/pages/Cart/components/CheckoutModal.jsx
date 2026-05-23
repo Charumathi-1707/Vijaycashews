@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { FaTimes } from "react-icons/fa";
 
 import useCart from "../../../hooks/useCart";
+import { fetchDeliveryCharges } from "../../../services/googleSheets.service";
+import { calculateDeliveryCharge } from "../../../utils/deliveryCalculator";
 
 const CheckoutModal = ({ closeModal }) => {
   const { cartItems, clearCart } = useCart();
@@ -14,6 +16,8 @@ const CheckoutModal = ({ closeModal }) => {
     city: "",
     pincode: "",
   });
+  const [deliveryRates, setDeliveryRates] = useState([]);
+  const [deliveryLoading, setDeliveryLoading] = useState(true);
 
   const subtotal = cartItems.reduce(
     (acc, item) =>
@@ -21,7 +25,11 @@ const CheckoutModal = ({ closeModal }) => {
     0
   );
 
-  const shipping = subtotal > 999 ? 0 : 99;
+  const shipping = calculateDeliveryCharge(
+    subtotal,
+    formData.pincode,
+    deliveryRates
+  );
 
   const total = subtotal + shipping;
 
@@ -31,6 +39,21 @@ const CheckoutModal = ({ closeModal }) => {
       [e.target.name]: e.target.value,
     });
   };
+
+  useEffect(() => {
+    const loadDeliveryRates = async () => {
+      try {
+        const rates = await fetchDeliveryCharges();
+        setDeliveryRates(rates);
+      } catch (error) {
+        console.error("Delivery rates load error:", error);
+      } finally {
+        setDeliveryLoading(false);
+      }
+    };
+
+    loadDeliveryRates();
+  }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -117,11 +140,19 @@ const CheckoutModal = ({ closeModal }) => {
               <div className="flex justify-between">
                 <span>Shipping</span>
                 <span>
-                  {shipping === 0
+                  {deliveryLoading
+                    ? "Checking..."
+                    : shipping === 0
                     ? "Free"
                     : `₹${shipping}`}
                 </span>
               </div>
+
+              {!deliveryLoading && formData.pincode && (
+                <div className="mt-2 text-sm text-gray-500">
+                  Delivery charges based on pincode.
+                </div>
+              )}
 
               <div className="mt-4 flex justify-between text-xl font-bold">
 
