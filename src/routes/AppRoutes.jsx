@@ -12,7 +12,6 @@ import Testimonials from "../pages/Testimonials/Testimonials";
 import Success from "../pages/Success/Success";
 import Login from "../pages/Auth/Login";
 import Register from "../pages/Auth/Register";
-import TrackOrder from "../pages/TrackOrder/TrackOrder";
 import MyOrders from "../pages/User/MyOrders";
 import Wishlist from "../pages/User/Wishlist";
 import Profile from "../pages/User/Profile";
@@ -41,7 +40,6 @@ const AppRoutes = () => {
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/testimonials" element={<Testimonials />} />
-        <Route path="/track-order" element={<TrackOrder />} />
         <Route path="/login" element={<ProtectedRoute guestOnly>{<Login />}</ProtectedRoute>} />
         <Route path="/register" element={<ProtectedRoute guestOnly>{<Register />}</ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute>{<Profile />}</ProtectedRoute>} />

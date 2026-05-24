@@ -7,27 +7,205 @@ function doPost(e) {
         "1ShLNlhBe_dh4Cot8ZG4VfNSG9xgMFPACcmslWJx0Irc"
       );
 
-    const sheet =
-      spreadsheet.getSheetByName(
-        "orders"
-      );
+    const action =
+      e.parameter.action || "saveOrder";
 
-    // GET FORM DATA
-    const data = e.parameter;
+    //
+    // SAVE USER
+    //
+    if (action === "saveUser") {
 
-    sheet.appendRow([
-      data.orderId || "",
-      data.date || "",
-      data.customerName || "",
-      data.phone || "",
-      data.address || "",
-      data.city || "",
-      data.pincode || "",
-      data.products || "",
-      data.subtotal || "",
-      data.delivery || "",
-      data.total || "",
-    ]);
+      const sheet =
+        spreadsheet.getSheetByName(
+          "users"
+        );
+
+      const data =
+        sheet.getDataRange().getValues();
+
+      const email =
+        e.parameter.email;
+
+      const existingRow =
+        data.findIndex(
+          (row, index) =>
+            index > 0 &&
+            row[2] === email
+        );
+
+      // UPDATE EXISTING USER
+      if (existingRow !== -1) {
+
+        sheet
+          .getRange(
+            existingRow + 1,
+            1,
+            1,
+            5
+          )
+          .setValues([[
+            data[existingRow][0],
+            e.parameter.name,
+            email,
+            e.parameter.password,
+            e.parameter.role,
+          ]]);
+
+      }
+
+      // NEW USER
+      else {
+
+        sheet.appendRow([
+          Utilities.getUuid(),
+
+          e.parameter.name,
+
+          email,
+
+          e.parameter.password,
+
+          e.parameter.role,
+        ]);
+      }
+    }
+
+    //
+    // SAVE ORDER
+    //
+    else if (
+      action === "saveOrder"
+    ) {
+
+      const sheet =
+        spreadsheet.getSheetByName(
+          "orders"
+        );
+
+      sheet.appendRow([
+        e.parameter.orderId,
+
+        e.parameter.date,
+
+        e.parameter.customerName,
+
+        e.parameter.phone,
+
+        e.parameter.address,
+
+        e.parameter.city,
+
+        e.parameter.pincode,
+
+        e.parameter.products,
+
+        e.parameter.subtotal,
+
+        e.parameter.delivery,
+
+        e.parameter.total,
+
+        "Pending",
+      ]);
+    }
+
+    //
+    // SAVE CART
+    //
+    else if (
+      action === "saveCart"
+    ) {
+
+      const sheet =
+        spreadsheet.getSheetByName(
+          "carts"
+        );
+
+      const data =
+        sheet.getDataRange().getValues();
+
+      const email =
+        e.parameter.email;
+
+      const existingRow =
+        data.findIndex(
+          (row, index) =>
+            index > 0 &&
+            row[0] === email
+        );
+
+      // UPDATE EXISTING
+      if (existingRow !== -1) {
+
+        sheet
+          .getRange(
+            existingRow + 1,
+            2
+          )
+          .setValue(
+            e.parameter.items
+          );
+      }
+
+      // CREATE NEW
+      else {
+
+        sheet.appendRow([
+          email,
+
+          e.parameter.items,
+        ]);
+      }
+    }
+
+    //
+    // SAVE WISHLIST
+    //
+    else if (
+      action === "saveWishlist"
+    ) {
+
+      const sheet =
+        spreadsheet.getSheetByName(
+          "wishlists"
+        );
+
+      const data =
+        sheet.getDataRange().getValues();
+
+      const email =
+        e.parameter.email;
+
+      const existingRow =
+        data.findIndex(
+          (row, index) =>
+            index > 0 &&
+            row[0] === email
+        );
+
+      // UPDATE EXISTING
+      if (existingRow !== -1) {
+
+        sheet
+          .getRange(
+            existingRow + 1,
+            2
+          )
+          .setValue(
+            e.parameter.items
+          );
+      }
+
+      // CREATE NEW
+      else {
+
+        sheet.appendRow([
+          email,
+
+          e.parameter.items,
+        ]);
+      }
+    }
 
     return ContentService
       .createTextOutput(

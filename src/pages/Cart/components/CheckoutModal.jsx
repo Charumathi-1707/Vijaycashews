@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import { FaTimes } from "react-icons/fa";
 
@@ -10,6 +11,7 @@ import generateOrderId from "../../../utils/generateOrderId";
 
 const CheckoutModal = ({ closeModal }) => {
   const { cartItems, clearCart } = useCart();
+  const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
     name: "",
@@ -88,6 +90,7 @@ const CheckoutModal = ({ closeModal }) => {
       delivery: shipping,
       total,
       status: "Pending",
+      assignedTo: "",
     };
 
     try {
@@ -122,19 +125,9 @@ const CheckoutModal = ({ closeModal }) => {
     message += `City: ${formData.city}%0A`;
     message += `Pincode: ${formData.pincode}%0A`;
 
-    const whatsappNumber =
-      "919751694905";
-
-    const whatsappURL =
-      `https://wa.me/${whatsappNumber}?text=${message}`;
-
-    window.open(
-      whatsappURL,
-      "_blank"
-    );
-
     clearCart();
     closeModal();
+    navigate("/success");
   };
 
   return (

@@ -10,3 +10,13 @@ export const updateOrderStatus = async (orderId, status) => {
     status,
   });
 };
+
+export const assignDeliveryPerson = async (
+  orderId,
+  deliveryPerson
+) => {
+  return postAppsScriptAction("assignDeliveryPerson", {
+    orderId,
+    assignedTo: deliveryPerson,
+  });
+};
