@@ -4,7 +4,7 @@ function doPost(e) {
 
     const spreadsheet =
       SpreadsheetApp.openById(
-        "1ShLNlhBe_dh4Cot8ZG4VfNSG9xgMFPACcmslWJx0Irc"
+        "1Nc_XqnrtVChMVIvmuIIIImqTDViOQ10Fy9oVrXpX_2o"
       );
 
     const action =
