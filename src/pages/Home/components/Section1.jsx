@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import logoImage from "../../../assets/images/logo.jpeg";
 
 const Section1 = () => {
   return (
@@ -42,7 +43,7 @@ const Section1 = () => {
           animate={{ opacity: 1, scale: 1 }}
         >
           <img
-            src="https://images.unsplash.com/photo-1601302074001-9b1c3a6e6da4?w=800"
+            src={logoImage}
             alt="Cashews"
             className="rounded-3xl shadow-2xl"
           />

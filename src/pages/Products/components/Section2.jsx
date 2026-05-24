@@ -1,8 +1,41 @@
-import { FaTimes, FaShoppingCart } from "react-icons/fa";
+import { FaTimes, FaShoppingCart, FaHeart, FaRegHeart } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 import useCart from "../../../hooks/useCart";
+import useAuth from "../../../hooks/useAuth";
+import useWishlist from "../../../hooks/useWishlist";
 
 const Section2 = ({ product, closeModal }) => {
+  const navigate = useNavigate();
   const { addToCart } = useCart();
+  const { user } = useAuth();
+  const { wishlistItems, addToWishlist, removeFromWishlist } = useWishlist();
+
+  const isWishlisted = wishlistItems.some(
+    (item) => item.id === product.id
+  );
+
+  const handleAddToCart = () => {
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+    addToCart(product);
+    closeModal();
+  };
+
+  const handleToggleWishlist = () => {
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+
+    if (isWishlisted) {
+      removeFromWishlist(product.id);
+    } else {
+      addToWishlist(product);
+    }
+    closeModal();
+  };
 
   return (
     <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/70 p-6">
@@ -52,16 +85,38 @@ const Section2 = ({ product, closeModal }) => {
             {product.description}
           </p>
 
-          <button
-            onClick={() => {
-              addToCart(product);
-              closeModal();
-            }}
-            className="mt-10 flex items-center gap-3 rounded-full bg-yellow-700 px-8 py-4 font-semibold text-white transition hover:bg-yellow-800"
-          >
-            <FaShoppingCart />
-            Add To Cart
-          </button>
+          <div className="mt-10 flex flex-col gap-4 sm:flex-row">
+            <button
+              onClick={handleAddToCart}
+              className="flex items-center justify-center gap-3 rounded-full bg-yellow-700 px-8 py-4 font-semibold text-white transition hover:bg-yellow-800"
+            >
+              <FaShoppingCart /> {user ? "Add To Cart" : "Login to Buy"}
+            </button>
+
+            {user ? (
+              <button
+                onClick={handleToggleWishlist}
+                className={`flex items-center justify-center gap-3 rounded-full px-8 py-4 font-semibold transition ${isWishlisted ? "bg-gray-100 text-gray-700 hover:bg-gray-200" : "bg-white text-yellow-700 shadow-sm hover:bg-yellow-50"}`}
+              >
+                {isWishlisted ? (
+                  <>
+                    <FaRegHeart /> Remove from Wishlist
+                  </>
+                ) : (
+                  <>
+                    <FaHeart /> Save to Wishlist
+                  </>
+                )}
+              </button>
+            ) : (
+              <button
+                onClick={() => navigate("/login")}
+                className="flex items-center justify-center gap-3 rounded-full bg-white px-8 py-4 font-semibold text-yellow-700 shadow-sm transition hover:bg-yellow-50"
+              >
+                <FaHeart /> Login to Save
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>

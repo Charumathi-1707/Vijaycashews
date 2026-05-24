@@ -6,7 +6,7 @@ import Section2 from "./Section2";
 
 import {
   fetchProducts,
-} from "../../../services/googleSheets.service";
+} from "../../../services/read/product.service";
 
 const Section1 = () => {
   const [products, setProducts] =

@@ -1,0 +1,55 @@
+function doPost(e) {
+
+  try {
+
+    const spreadsheet =
+      SpreadsheetApp.openById(
+        "1ShLNlhBe_dh4Cot8ZG4VfNSG9xgMFPACcmslWJx0Irc"
+      );
+
+    const sheet =
+      spreadsheet.getSheetByName(
+        "orders"
+      );
+
+    // GET FORM DATA
+    const data = e.parameter;
+
+    sheet.appendRow([
+      data.orderId || "",
+      data.date || "",
+      data.customerName || "",
+      data.phone || "",
+      data.address || "",
+      data.city || "",
+      data.pincode || "",
+      data.products || "",
+      data.subtotal || "",
+      data.delivery || "",
+      data.total || "",
+    ]);
+
+    return ContentService
+      .createTextOutput(
+        JSON.stringify({
+          success: true,
+        })
+      )
+      .setMimeType(
+        ContentService.MimeType.JSON
+      );
+
+  } catch (error) {
+
+    return ContentService
+      .createTextOutput(
+        JSON.stringify({
+          success: false,
+          error: error.toString(),
+        })
+      )
+      .setMimeType(
+        ContentService.MimeType.JSON
+      );
+  }
+}

@@ -3,9 +3,9 @@ import { useEffect, useState } from "react";
 import { FaTimes } from "react-icons/fa";
 
 import useCart from "../../../hooks/useCart";
-import { fetchDeliveryCharges } from "../../../services/googleSheets.service";
+import { fetchDeliveryCharges } from "../../../services/read/delivery.service";
 import { calculateDeliveryCharge } from "../../../utils/deliveryCalculator";
-import { saveOrder } from "../../../services/order.service";
+import { saveOrder } from "../../../services/write/order.service";
 import generateOrderId from "../../../utils/generateOrderId";
 
 const CheckoutModal = ({ closeModal }) => {
@@ -13,6 +13,7 @@ const CheckoutModal = ({ closeModal }) => {
 
   const [formData, setFormData] = useState({
     name: "",
+    email: "",
     phone: "",
     address: "",
     city: "",
@@ -72,6 +73,7 @@ const CheckoutModal = ({ closeModal }) => {
       orderId,
       date: new Date().toLocaleString(),
       customerName: formData.name,
+      email: formData.email,
       phone: formData.phone,
       address: formData.address,
       city: formData.city,
@@ -85,6 +87,7 @@ const CheckoutModal = ({ closeModal }) => {
       subtotal,
       delivery: shipping,
       total,
+      status: "Pending",
     };
 
     try {
@@ -218,6 +221,16 @@ const CheckoutModal = ({ closeModal }) => {
             required
             placeholder="Full Name"
             value={formData.name}
+            onChange={handleChange}
+            className="rounded-2xl border p-4 outline-none focus:border-yellow-700"
+          />
+
+          <input
+            type="email"
+            name="email"
+            required
+            placeholder="Email Address"
+            value={formData.email}
             onChange={handleChange}
             className="rounded-2xl border p-4 outline-none focus:border-yellow-700"
           />

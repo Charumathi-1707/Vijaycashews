@@ -10,6 +10,11 @@ const navigation = [
   },
 
   {
+    label: "Track Order",
+    path: "/track-order",
+  },
+
+  {
     label: "About",
     path: "/about",
   },

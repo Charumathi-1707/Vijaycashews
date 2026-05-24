@@ -3,7 +3,7 @@ import TestimonialCard from "./TestimonialCard";
 
 import {
   fetchTestimonials,
-} from "../../../services/googleSheets.service";
+} from "../../../services/read/testimonial.service";
 
 const Section1 = () => {
   const [testimonials, setTestimonials] =

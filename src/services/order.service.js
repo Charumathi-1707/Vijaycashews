@@ -1,43 +1,13 @@
-import axios from "axios";
+import {
+  saveOrder as saveOrderApi,
+  updateOrderStatus as updateOrderStatusApi,
+  saveUser as saveUserApi,
+  saveCart as saveCartApi,
+  saveWishlist as saveWishlistApi,
+} from "./write/index";
 
-const GOOGLE_SCRIPT_URL =
-  "https://script.google.com/macros/s/AKfycbwM8l_Q0p_k91Cgf07wTzhe2NQ_hPo6omynvCGxn5ECxK2nssoNGpEXZAOIcgJsPJQL/exec";
-
-export const saveOrder =
-  async (orderData) => {
-
-    try {
-
-      // CREATE URL-ENCODED PAYLOAD FOR Google Apps Script
-      const params = new URLSearchParams();
-
-      Object.entries(orderData).forEach(
-        ([key, value]) => {
-          params.append(key, String(value ?? ""));
-        }
-      );
-
-      const response =
-        await axios.post(
-          GOOGLE_SCRIPT_URL,
-          params.toString(),
-          {
-            headers: {
-              "Content-Type":
-                "application/x-www-form-urlencoded;charset=UTF-8",
-            },
-          }
-        );
-
-      return response.data;
-
-    } catch (error) {
-
-      console.error(
-        "Save Order Error:",
-        error
-      );
-
-      throw error;
-    }
-  };
+export const saveOrder = saveOrderApi;
+export const updateOrderStatus = updateOrderStatusApi;
+export const saveUser = saveUserApi;
+export const saveCart = saveCartApi;
+export const saveWishlist = saveWishlistApi;

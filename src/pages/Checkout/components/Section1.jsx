@@ -4,7 +4,7 @@ import useCart from "../../../hooks/useCart";
 
 import {
   saveOrder,
-} from "../../../services/order.service";
+} from "../../../services/write/order.service";
 
 import generateOrderId from "../../../utils/generateOrderId";
 
@@ -87,6 +87,8 @@ const Section1 = () => {
           pincode:
             formData.pincode,
 
+          email: formData.email,
+
           products:
             cartItems
               .map(
@@ -101,6 +103,8 @@ const Section1 = () => {
             deliveryCharge,
 
           total,
+
+          status: "Pending",
         };
 
         console.log(
