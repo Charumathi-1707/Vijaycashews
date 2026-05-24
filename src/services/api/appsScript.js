@@ -1,7 +1,7 @@
 import axios from "./axios";
 
 const GOOGLE_SCRIPT_URL =
-  "https://script.google.com/macros/s/AKfycbwM8l_Q0p_k91Cgf07wTzhe2NQ_hPo6omynvCGxn5ECxK2nssoNGpEXZAOIcgJsPJQL/exec";
+  "https://script.google.com/macros/s/AKfycbweLzw4-cAyLHfl8VSGT9hS3LF6vRwWBhcVo5FNkSC4jCEHi5oAhXlz4E4fwVQ_Kz9ckg/exec";
 
 const buildFormBody = (payload) => {
   const params = new URLSearchParams();
