@@ -339,185 +339,184 @@ const AdminOrders = () => {
               </p>
             </div>
           ) : (
-            <AnimatePresence>
-              <div className="space-y-4">
-                {filteredOrders.map((order, index) => (
-                  <motion.div
-                    key={order._id}
-                    id={`order-${order._id}`}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    className="rounded-2xl border border-gray-200 bg-white shadow-md transition-all hover:shadow-lg"
-                  >
-                    {/* Order Header */}
-                    <div className="p-6 cursor-pointer" onClick={() => toggleExpand(order._id)}>
-                      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                        <div className="flex items-center gap-4">
-                          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-yellow-500 to-amber-600 text-white">
-                            <span className="font-bold">#{order.orderId?.slice(-4) || order._id?.slice(-4)}</span>
-                          </div>
-                          <div>
-                            <p className="text-sm text-gray-500">Order ID</p>
-                            <p className="font-mono font-semibold text-gray-900">{order.orderId || order._id}</p>
-                          </div>
+            // ✅ FIX: Removed outer AnimatePresence — it was causing cards to stay invisible (opacity: 0)
+            <div className="space-y-4">
+              {filteredOrders.map((order, index) => (
+                <motion.div
+                  key={order._id}
+                  id={`order-${order._id}`}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  className="rounded-2xl border border-gray-200 bg-white shadow-md transition-all hover:shadow-lg"
+                >
+                  {/* Order Header */}
+                  <div className="p-6 cursor-pointer" onClick={() => toggleExpand(order._id)}>
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-yellow-500 to-amber-600 text-white">
+                          <span className="font-bold">#{order.orderId?.slice(-4) || order._id?.slice(-4)}</span>
                         </div>
-
-                        <div className="flex items-center gap-6">
-                          <div>
-                            <p className="text-sm text-gray-500">Customer</p>
-                            <p className="font-medium text-gray-900">
-                              {order.shippingAddress?.name || order.customerName || order.userId?.name || order.email?.split("@")[0] || "Guest"}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-sm text-gray-500">Total</p>
-                            <p className="text-xl font-bold text-yellow-700">
-                              ₹{order.total?.toLocaleString() || "0"}
-                            </p>
-                          </div>
-                          <div>
-                            <div className={`flex items-center gap-2 rounded-full ${getStatusColor(order.status)} px-3 py-1 text-white`}>
-                              {getStatusIcon(order.status)}
-                              <span className="text-sm font-semibold">{order.status || "pending"}</span>
-                            </div>
-                          </div>
-                          <div className="text-gray-400">
-                            {expandedOrder === order._id ? <FaChevronUp /> : <FaChevronDown />}
-                          </div>
+                        <div>
+                          <p className="text-sm text-gray-500">Order ID</p>
+                          <p className="font-mono font-semibold text-gray-900">{order.orderId || order._id}</p>
                         </div>
                       </div>
 
-                      {/* Progress Bar */}
-                      <div className="mt-4">
-                        <div className="flex justify-between text-xs text-gray-500 mb-1">
-                          {statusOptions.map(opt => (
-                            <span key={opt.value} className={order.status === opt.value ? "font-bold text-yellow-600" : ""}>
-                              {opt.label}
-                            </span>
-                          ))}
+                      <div className="flex items-center gap-6">
+                        <div>
+                          <p className="text-sm text-gray-500">Customer</p>
+                          <p className="font-medium text-gray-900">
+                            {order.shippingAddress?.name || order.customerName || order.userId?.name || order.email?.split("@")[0] || "Guest"}
+                          </p>
                         </div>
-                        <div className="h-2 overflow-hidden rounded-full bg-gray-200">
-                          <motion.div
-                            className={`h-full ${getStatusColor(order.status)}`}
-                            initial={{ width: 0 }}
-                            animate={{ width: `${getStatusProgress(order.status)}%` }}
-                            transition={{ duration: 0.5 }}
-                          />
+                        <div>
+                          <p className="text-sm text-gray-500">Total</p>
+                          <p className="text-xl font-bold text-yellow-700">
+                            ₹{order.total?.toLocaleString() || "0"}
+                          </p>
+                        </div>
+                        <div>
+                          <div className={`flex items-center gap-2 rounded-full ${getStatusColor(order.status)} px-3 py-1 text-white`}>
+                            {getStatusIcon(order.status)}
+                            <span className="text-sm font-semibold">{order.status || "pending"}</span>
+                          </div>
+                        </div>
+                        <div className="text-gray-400">
+                          {expandedOrder === order._id ? <FaChevronUp /> : <FaChevronDown />}
                         </div>
                       </div>
                     </div>
 
-                    {/* Expanded Details */}
-                    <AnimatePresence>
-                      {expandedOrder === order._id && (
+                    {/* Progress Bar */}
+                    <div className="mt-4">
+                      <div className="flex justify-between text-xs text-gray-500 mb-1">
+                        {statusOptions.map(opt => (
+                          <span key={opt.value} className={order.status === opt.value ? "font-bold text-yellow-600" : ""}>
+                            {opt.label}
+                          </span>
+                        ))}
+                      </div>
+                      <div className="h-2 overflow-hidden rounded-full bg-gray-200">
                         <motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: "auto", opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          className="border-t border-gray-100 bg-gray-50 p-6"
-                        >
-                          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                            {/* Customer Info */}
-                            <div className="rounded-xl bg-white p-4 shadow-sm">
-                              <div className="flex items-center gap-2 mb-3">
-                                <FaUserCircle className="text-yellow-600" />
-                                <h3 className="font-semibold text-gray-800">Customer Details</h3>
-                              </div>
-                              <div className="space-y-2 text-sm">
-                                <p className="flex items-center gap-2">
-                                  <FaUserCircle className="text-gray-400" />
-                                  {order.shippingAddress?.name || order.customerName || order.name || "N/A"}
-                                </p>
-                                <p className="flex items-center gap-2">
-                                  <FaEnvelope className="text-gray-400" />
-                                  {order.shippingAddress?.email || order.email || "N/A"}
-                                </p>
-                                <p className="flex items-center gap-2">
-                                  <FaPhoneAlt className="text-gray-400" />
-                                  {order.shippingAddress?.phone || order.phone || "N/A"}
-                                </p>
-                              </div>
-                            </div>
+                          className={`h-full ${getStatusColor(order.status)}`}
+                          initial={{ width: 0 }}
+                          animate={{ width: `${getStatusProgress(order.status)}%` }}
+                          transition={{ duration: 0.5 }}
+                        />
+                      </div>
+                    </div>
+                  </div>
 
-                            {/* Delivery Info */}
-                            <div className="rounded-xl bg-white p-4 shadow-sm">
-                              <div className="flex items-center gap-2 mb-3">
-                                <FaMapMarkerAlt className="text-yellow-600" />
-                                <h3 className="font-semibold text-gray-800">Delivery Address</h3>
-                              </div>
-                              <p className="text-sm text-gray-600">
-                                {order.shippingAddress?.street || order.address || "N/A"}, {order.shippingAddress?.city || order.city || ""} {order.shippingAddress?.state || order.state || ""} {order.shippingAddress?.pincode || order.pincode || ""}
+                  {/* Expanded Details */}
+                  <AnimatePresence>
+                    {expandedOrder === order._id && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="border-t border-gray-100 bg-gray-50 p-6"
+                      >
+                        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                          {/* Customer Info */}
+                          <div className="rounded-xl bg-white p-4 shadow-sm">
+                            <div className="flex items-center gap-2 mb-3">
+                              <FaUserCircle className="text-yellow-600" />
+                              <h3 className="font-semibold text-gray-800">Customer Details</h3>
+                            </div>
+                            <div className="space-y-2 text-sm">
+                              <p className="flex items-center gap-2">
+                                <FaUserCircle className="text-gray-400" />
+                                {order.shippingAddress?.name || order.customerName || order.name || "N/A"}
                               </p>
-                              {order.assignedTo && (
-                                <div className="mt-3 pt-3 border-t border-gray-100">
-                                  <p className="text-xs text-gray-500">Delivery Partner</p>
-                                  <p className="text-sm font-medium text-gray-700">
-                                    {typeof order.assignedTo === "string" ? order.assignedTo : order.assignedTo?.name || order.assignedTo?.email || "Assigned"
-                                  }</p>
-                                </div>
-                              )}
-                            </div>
-
-                            {/* Actions */}
-                            <div className="rounded-xl bg-white p-4 shadow-sm">
-                              <div className="flex items-center gap-2 mb-3">
-                                <FaTruck className="text-yellow-600" />
-                                <h3 className="font-semibold text-gray-800">Actions</h3>
-                              </div>
-                              <div className="space-y-3">
-                                {order.status !== "delivered" && (
-                                  <div className="space-y-2">
-                                    <select
-                                      value={driverSelection[order._id] || ""}
-                                      onChange={(e) => setDriverSelection((current) => ({ ...current, [order._id]: e.target.value }))}
-                                      className="w-full rounded-full border border-gray-300 px-4 py-2 focus:border-yellow-500 focus:outline-none"
-                                    >
-                                      <option value="">Select delivery driver</option>
-                                      {drivers.map((driver) => (
-                                        <option key={driver._id || driver.id} value={driver._id || driver.id}>
-                                          {driver.name || driver.email}
-                                        </option>
-                                      ))}
-                                    </select>
-                                    {!order.assignedTo && (
-                                      <button
-                                        onClick={() => assignToDelivery(order._id)}
-                                        disabled={saving && updatingOrderId === order._id}
-                                        className="w-full rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-50"
-                                      >
-                                        {updatingOrderId === order._id ? (
-                                          <FaSpinner className="mx-auto animate-spin" />
-                                        ) : (
-                                          "Assign to Delivery"
-                                        )}
-                                      </button>
-                                    )}
-                                  </div>
-                                )}
-                                {getNextStatus(order.status) && (
-                                  <button
-                                    onClick={() => updateStatus(order._id, getNextStatus(order.status))}
-                                    disabled={saving && updatingOrderId === order._id}
-                                    className="w-full rounded-full bg-yellow-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-yellow-700 disabled:opacity-50"
-                                  >
-                                    {updatingOrderId === order._id ? (
-                                      <FaSpinner className="mx-auto animate-spin" />
-                                    ) : (
-                                      `Mark as ${getNextStatus(order.status)}`
-                                    )}
-                                  </button>
-                                )}
-                              </div>
+                              <p className="flex items-center gap-2">
+                                <FaEnvelope className="text-gray-400" />
+                                {order.shippingAddress?.email || order.email || "N/A"}
+                              </p>
+                              <p className="flex items-center gap-2">
+                                <FaPhoneAlt className="text-gray-400" />
+                                {order.shippingAddress?.phone || order.phone || "N/A"}
+                              </p>
                             </div>
                           </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </motion.div>
-                ))}
-              </div>
-            </AnimatePresence>
+
+                          {/* Delivery Info */}
+                          <div className="rounded-xl bg-white p-4 shadow-sm">
+                            <div className="flex items-center gap-2 mb-3">
+                              <FaMapMarkerAlt className="text-yellow-600" />
+                              <h3 className="font-semibold text-gray-800">Delivery Address</h3>
+                            </div>
+                            <p className="text-sm text-gray-600">
+                              {order.shippingAddress?.street || order.address || "N/A"}, {order.shippingAddress?.city || order.city || ""} {order.shippingAddress?.state || order.state || ""} {order.shippingAddress?.pincode || order.pincode || ""}
+                            </p>
+                            {order.assignedTo && (
+                              <div className="mt-3 pt-3 border-t border-gray-100">
+                                <p className="text-xs text-gray-500">Delivery Partner</p>
+                                <p className="text-sm font-medium text-gray-700">
+                                  {typeof order.assignedTo === "string" ? order.assignedTo : order.assignedTo?.name || order.assignedTo?.email || "Assigned"}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Actions */}
+                          <div className="rounded-xl bg-white p-4 shadow-sm">
+                            <div className="flex items-center gap-2 mb-3">
+                              <FaTruck className="text-yellow-600" />
+                              <h3 className="font-semibold text-gray-800">Actions</h3>
+                            </div>
+                            <div className="space-y-3">
+                              {order.status !== "delivered" && (
+                                <div className="space-y-2">
+                                  <select
+                                    value={driverSelection[order._id] || ""}
+                                    onChange={(e) => setDriverSelection((current) => ({ ...current, [order._id]: e.target.value }))}
+                                    className="w-full rounded-full border border-gray-300 px-4 py-2 focus:border-yellow-500 focus:outline-none"
+                                  >
+                                    <option value="">Select delivery driver</option>
+                                    {drivers.map((driver) => (
+                                      <option key={driver._id || driver.id} value={driver._id || driver.id}>
+                                        {driver.name || driver.email}
+                                      </option>
+                                    ))}
+                                  </select>
+                                  {!order.assignedTo && (
+                                    <button
+                                      onClick={() => assignToDelivery(order._id)}
+                                      disabled={saving && updatingOrderId === order._id}
+                                      className="w-full rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-50"
+                                    >
+                                      {updatingOrderId === order._id ? (
+                                        <FaSpinner className="mx-auto animate-spin" />
+                                      ) : (
+                                        "Assign to Delivery"
+                                      )}
+                                    </button>
+                                  )}
+                                </div>
+                              )}
+                              {getNextStatus(order.status) && (
+                                <button
+                                  onClick={() => updateStatus(order._id, getNextStatus(order.status))}
+                                  disabled={saving && updatingOrderId === order._id}
+                                  className="w-full rounded-full bg-yellow-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-yellow-700 disabled:opacity-50"
+                                >
+                                  {updatingOrderId === order._id ? (
+                                    <FaSpinner className="mx-auto animate-spin" />
+                                  ) : (
+                                    `Mark as ${getNextStatus(order.status)}`
+                                  )}
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
+              ))}
+            </div>
           )}
         </div>
       </section>
