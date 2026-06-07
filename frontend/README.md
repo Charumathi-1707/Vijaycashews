@@ -1,49 +1,16 @@
-# Vijay Cashew - Frontend
+# React + Vite
 
-React + Vite frontend for the Vijay Cashew e-commerce platform.
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-## Setup
+Currently, two official plugins are available:
 
-```bash
-npm install
-npm run dev
-```
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
 
-## Build
+## React Compiler
 
-```bash
-npm run build
-npm run preview
-```
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
-## Project Structure
+## Expanding the ESLint configuration
 
-```
-src/
-├── components/      # React components
-├── pages/          # Page components
-├── services/       # API services
-├── context/        # React context
-├── hooks/          # Custom hooks
-├── styles/         # Global styles
-├── utils/          # Utilities
-├── App.jsx         # Main app
-└── main.jsx        # Entry point
-```
-
-## Environment Variables
-
-Create a `.env` file in the root:
-
-```
-VITE_API_URL=http://localhost:5000/api
-```
-
-## API Integration
-
-All API calls go through `services/api/axios.js` which is configured to:
-- Use the backend URL from `.env`
-- Include JWT tokens in all requests
-- Handle 401 errors automatically
-
-See [../backend/README.md](../backend/README.md) for API documentation.
+If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.

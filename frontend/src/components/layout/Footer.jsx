@@ -1,282 +1,105 @@
-import { useState, useEffect } from "react";
-import {
-  FaFacebookF,
-  FaInstagram,
-  FaTwitter,
-  FaWhatsapp,
-  FaArrowUp,
-  FaEnvelope,
-  FaMapMarkerAlt,
-  FaPhoneAlt,
-  FaRegClock,
-  FaGem,
-  FaLeaf,
-  FaTrophy,
-  FaShippingFast,
-} from "react-icons/fa";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from 'react-router-dom';
+import { Mail, Phone, MapPin, ArrowRight } from 'lucide-react';
 
-const Footer = () => {
-  const [showScrollTop, setShowScrollTop] = useState(false);
-  const [email, setEmail] = useState("");
-  const [newsletterStatus, setNewsletterStatus] = useState(null);
-  const navigate = useNavigate();
+// Social icon SVGs (not available in this lucide version)
+const Facebook = ({ className }) => <svg className={className} fill="currentColor" viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg>;
+const Instagram = ({ className }) => <svg className={className} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>;
+const Twitter = ({ className }) => <svg className={className} fill="currentColor" viewBox="0 0 24 24"><path d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z"/></svg>;
 
-  // Scroll to top button visibility
-  useEffect(() => {
-    const handleScroll = () => {
-      setShowScrollTop(window.scrollY > 500);
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  const handleNewsletterSubmit = (e) => {
-    e.preventDefault();
-    if (!email) return;
-    
-    // Simulate API call (preserve logic - no actual API change)
-    setNewsletterStatus("loading");
-    setTimeout(() => {
-      setNewsletterStatus("success");
-      setEmail("");
-      setTimeout(() => setNewsletterStatus(null), 3000);
-    }, 1000);
-  };
-
-  const handleNavigation = (path) => {
-    navigate(path);
-    scrollToTop();
-  };
-
+export default function Footer() {
   return (
-    <>
-      <footer
-        id="contact"
-        className="relative bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800 text-white"
-      >
-        {/* Decorative top border */}
-        <div className="absolute top-0 left-0 h-1 w-full bg-gradient-to-r from-yellow-500 via-yellow-600 to-yellow-500"></div>
-
-        {/* Newsletter Section */}
-        <div className="border-b border-white/10">
-          <div className="mx-auto max-w-7xl px-6 py-12">
-            <div className="flex flex-col items-center justify-between gap-6 rounded-2xl bg-white/5 p-8 backdrop-blur-sm md:flex-row md:p-10">
-              <div className="text-center md:text-left">
-                <h3 className="text-2xl font-bold text-yellow-500">
-                  Subscribe to our Newsletter
-                </h3>
-                <p className="mt-2 text-gray-400">
-                  Get exclusive offers, recipes, and cashew updates!
-                </p>
+    <footer className="bg-gray-900 text-gray-300 mt-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-16 pb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
+          {/* Brand */}
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-primary-700 rounded-xl flex items-center justify-center">
+                <span className="text-white font-display font-black text-sm">S</span>
               </div>
-              <form onSubmit={handleNewsletterSubmit} className="flex w-full max-w-md flex-col gap-3 sm:flex-row">
-                <div className="relative flex-1">
-                  <FaEnvelope className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" />
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Enter your email"
-                    className="w-full rounded-full bg-white/10 px-11 py-3 text-white placeholder-gray-400 outline-none transition-all focus:bg-white/20 focus:ring-2 focus:ring-yellow-500"
-                    required
-                  />
-                </div>
-                <button
-                  type="submit"
-                  disabled={newsletterStatus === "loading"}
-                  className="rounded-full bg-yellow-600 px-6 py-3 font-semibold transition-all hover:bg-yellow-700 hover:shadow-lg disabled:opacity-50"
-                >
-                  {newsletterStatus === "loading" ? "Subscribing..." : "Subscribe"}
+              <span className="font-display font-bold text-xl text-white">ShopEase</span>
+            </div>
+            <p className="text-sm leading-relaxed text-gray-400 mb-5">Your one-stop destination for quality products. Fast delivery, easy returns, and unbeatable prices.</p>
+            <div className="flex items-center gap-3">
+              {[Facebook, Instagram, Twitter].map((Icon, i) => (
+                <a key={i} href="#" className="w-9 h-9 bg-gray-800 hover:bg-primary-600 rounded-xl flex items-center justify-center transition-colors">
+                  <Icon className="w-4 h-4" />
+                </a>
+              ))}
+            </div>
+          </div>
+
+          {/* Quick Links */}
+          <div>
+            <h3 className="font-display font-bold text-white mb-4">Quick Links</h3>
+            <ul className="space-y-2.5">
+              {[['Home', '/'], ['Shop', '/shop'], ['Categories', '/categories'], ['About Us', '/about'], ['Contact', '/contact']].map(([label, path]) => (
+                <li key={path}>
+                  <Link to={path} className="text-sm text-gray-400 hover:text-white transition-colors flex items-center gap-1.5 group">
+                    <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 -translate-x-1 group-hover:translate-x-0 transition-all" />
+                    {label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Customer Service */}
+          <div>
+            <h3 className="font-display font-bold text-white mb-4">Customer Service</h3>
+            <ul className="space-y-2.5">
+              {[['My Account', '/account'], ['Orders', '/orders'], ['Returns', '/returns'], ['FAQ', '/faq'], ['Privacy Policy', '/privacy']].map(([label, path]) => (
+                <li key={path}>
+                  <Link to={path} className="text-sm text-gray-400 hover:text-white transition-colors flex items-center gap-1.5 group">
+                    <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 -translate-x-1 group-hover:translate-x-0 transition-all" />
+                    {label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Contact */}
+          <div>
+            <h3 className="font-display font-bold text-white mb-4">Contact Us</h3>
+            <div className="space-y-3">
+              <div className="flex items-start gap-3 text-sm text-gray-400">
+                <MapPin className="w-4 h-4 mt-0.5 shrink-0 text-primary-500" />
+                123 Commerce St, Mumbai, Maharashtra 400001
+              </div>
+              <div className="flex items-center gap-3 text-sm text-gray-400">
+                <Phone className="w-4 h-4 shrink-0 text-primary-500" />
+                +91 98765 43210
+              </div>
+              <div className="flex items-center gap-3 text-sm text-gray-400">
+                <Mail className="w-4 h-4 shrink-0 text-primary-500" />
+                support@shopease.in
+              </div>
+            </div>
+            <div className="mt-5">
+              <p className="text-xs text-gray-500 mb-2 font-medium">Newsletter</p>
+              <div className="flex">
+                <input type="email" placeholder="Your email" className="flex-1 px-3 py-2 bg-gray-800 border border-gray-700 rounded-l-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-primary-500" />
+                <button className="px-3 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-r-xl transition-colors">
+                  <ArrowRight className="w-4 h-4" />
                 </button>
-              </form>
-              {newsletterStatus === "success" && (
-                <p className="text-sm text-green-400 animate-fade-in">
-                  ✅ Subscribed successfully!
-                </p>
-              )}
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="mx-auto max-w-7xl px-6 py-16 lg:py-20">
-          <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-4">
-            {/* Brand Column */}
-            <div className="space-y-6">
-              <h2 className="text-4xl font-bold bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">
-                Vijay Cashews
-              </h2>
-              <p className="leading-relaxed text-gray-400">
-                Bringing premium quality handpicked cashews since 1985 with trusted freshness and taste.
-              </p>
-              
-              {/* Trust Badges */}
-              <div className="flex flex-wrap gap-4 pt-2">
-                <div className="flex items-center gap-2 text-sm text-gray-400">
-                  <FaLeaf className="text-green-500" />
-                  <span>100% Natural</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-gray-400">
-                  <FaTrophy className="text-yellow-500" />
-                  <span>Premium Quality</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-gray-400">
-                  <FaShippingFast className="text-blue-500" />
-                  <span>Free Shipping*</span>
-                </div>
-              </div>
-
-              {/* Social Links */}
-              <div className="flex gap-3">
-                <a
-                  href="#"
-                  className="group relative overflow-hidden rounded-full bg-white/10 p-3 transition-all hover:bg-yellow-600"
-                  aria-label="Facebook"
-                >
-                  <FaFacebookF className="relative z-10 text-sm transition-transform group-hover:scale-110" />
-                </a>
-                <a
-                  href="#"
-                  className="group relative overflow-hidden rounded-full bg-white/10 p-3 transition-all hover:bg-gradient-to-tr hover:from-pink-500 hover:to-orange-500"
-                  aria-label="Instagram"
-                >
-                  <FaInstagram className="relative z-10 transition-transform group-hover:scale-110" />
-                </a>
-                <a
-                  href="#"
-                  className="group relative overflow-hidden rounded-full bg-white/10 p-3 transition-all hover:bg-sky-600"
-                  aria-label="Twitter"
-                >
-                  <FaTwitter className="relative z-10 transition-transform group-hover:scale-110" />
-                </a>
-                <a
-                  href="https://wa.me/919751694905"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group relative overflow-hidden rounded-full bg-white/10 p-3 transition-all hover:bg-green-600"
-                  aria-label="WhatsApp"
-                >
-                  <FaWhatsapp className="relative z-10 transition-transform group-hover:scale-110" />
-                </a>
-              </div>
-            </div>
-
-            {/* Quick Links */}
-            <div>
-              <h3 className="mb-6 flex items-center gap-2 text-xl font-bold">
-                <span className="h-1 w-8 rounded-full bg-yellow-500"></span>
-                Quick Links
-              </h3>
-              <ul className="space-y-3">
-                {["Home", "Products", "Quality", "Reviews"].map((item) => (
-                  <li key={item}>
-                    <button
-                      onClick={() => handleNavigation(item === "Home" ? "/" : `/${item.toLowerCase()}`)}
-                      className="group flex items-center gap-2 text-gray-400 transition-all hover:text-yellow-500"
-                    >
-                      <span className="h-1 w-1 rounded-full bg-gray-600 transition-all group-hover:bg-yellow-500"></span>
-                      {item}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Products */}
-            <div>
-              <h3 className="mb-6 flex items-center gap-2 text-xl font-bold">
-                <span className="h-1 w-8 rounded-full bg-yellow-500"></span>
-                Products
-              </h3>
-              <ul className="space-y-3">
-                {["Whole Cashews", "Roasted Cashews", "Gift Packs", "Bulk Orders"].map((item) => (
-                  <li key={item}>
-                    <button
-                      onClick={() => handleNavigation(`/products?category=${item.toLowerCase().replace(" ", "-")}`)}
-                      className="group flex items-center gap-2 text-gray-400 transition-all hover:text-yellow-500"
-                    >
-                      <FaGem className="h-3 w-3 opacity-0 transition-all group-hover:opacity-100" />
-                      {item}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Contact Info */}
-            <div>
-              <h3 className="mb-6 flex items-center gap-2 text-xl font-bold">
-                <span className="h-1 w-8 rounded-full bg-yellow-500"></span>
-                Contact Us
-              </h3>
-              <ul className="space-y-4">
-                <li className="flex items-start gap-3 text-gray-400 transition-all hover:text-yellow-500">
-                  <FaPhoneAlt className="mt-1 flex-shrink-0" />
-                  <a href="tel:+919751694905" className="hover:underline">
-                    +91 97516 94905
-                  </a>
-                </li>
-                <li className="flex items-start gap-3 text-gray-400 transition-all hover:text-yellow-500">
-                  <FaEnvelope className="mt-1 flex-shrink-0" />
-                  <a href="mailto:hello@vijaycashews.com" className="hover:underline">
-                    hello@vijaycashews.com
-                  </a>
-                </li>
-                <li className="flex items-start gap-3 text-gray-400 transition-all hover:text-yellow-500">
-                  <FaMapMarkerAlt className="mt-1 flex-shrink-0" />
-                  <span>Mumbai, India</span>
-                </li>
-                <li className="flex items-start gap-3 text-gray-400">
-                  <FaRegClock className="mt-1 flex-shrink-0" />
-                  <span>Mon-Sat: 9AM - 8PM</span>
-                </li>
-              </ul>
+        <div className="border-t border-gray-800 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-gray-500">
+          <p>© 2025 ShopEase. All rights reserved.</p>
+          <div className="flex items-center gap-4">
+            <span>Secure Payments</span>
+            <div className="flex items-center gap-2">
+              {['VISA', 'MC', 'UPI', 'COD'].map(m => (
+                <span key={m} className="px-2 py-1 bg-gray-800 rounded text-xs">{m}</span>
+              ))}
             </div>
           </div>
         </div>
-
-        {/* Bottom Bar */}
-        <div className="border-t border-white/10 bg-black/20">
-          <div className="mx-auto max-w-7xl px-6 py-6">
-            <div className="flex flex-col items-center justify-between gap-4 text-center text-sm text-gray-500 md:flex-row md:text-left">
-              <p>
-                © {new Date().getFullYear()} Vijay Cashews. All rights reserved.
-              </p>
-              <div className="flex gap-6">
-                <a href="#" className="transition-colors hover:text-yellow-500">
-                  Privacy Policy
-                </a>
-                <a href="#" className="transition-colors hover:text-yellow-500">
-                  Terms of Service
-                </a>
-                <a href="#" className="transition-colors hover:text-yellow-500">
-                  Shipping Policy
-                </a>
-              </div>
-              <p className="flex items-center gap-1">
-                Made with <span className="text-red-500 animate-pulse">❤️</span> in India
-              </p>
-            </div>
-          </div>
-        </div>
-      </footer>
-
-      {/* Scroll to Top Button */}
-      {showScrollTop && (
-        <button
-          onClick={scrollToTop}
-          className="fixed bottom-8 right-8 z-50 rounded-full bg-yellow-600 p-3 text-white shadow-lg transition-all hover:bg-yellow-700 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 animate-fade-in-up"
-          aria-label="Scroll to top"
-        >
-          <FaArrowUp className="h-5 w-5" />
-        </button>
-      )}
-    </>
+      </div>
+    </footer>
   );
-};
-
-export default Footer;
+}

@@ -1,86 +1,126 @@
-import express from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import connectDB from './config/database.js';
-import User from './models/User.js';
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const helmet = require('helmet');
+const morgan = require('morgan');
+const compression = require('compression');
+const rateLimit = require('express-rate-limit');
+const cookieParser = require('cookie-parser');
 
-// Import routes
-import authRoutes from './routes/authRoutes.js';
-import productRoutes from './routes/productRoutes.js';
-import cartRoutes from './routes/cartRoutes.js';
-import wishlistRoutes from './routes/wishlistRoutes.js';
-import orderRoutes from './routes/orderRoutes.js';
-import testimonialRoutes from './routes/testimonialRoutes.js';
-import userRoutes from './routes/userRoutes.js';
+const connectDB = require('./config/db');
+const routes = require('./routes');
+const errorHandler = require('./middleware/error');
+const requestTimeout = require('./middleware/timeout');
 
-// Load environment variables
-dotenv.config();
-
-// Initialize app
 const app = express();
 
-// Connect to database
-await connectDB();
+// ─── Database ───────────────────────────────────────────────
+connectDB();
 
-// Seed default admin user
-const seedDefaultAdmin = async () => {
-  try {
-    const adminExists = await User.findOne({ email: 'admin@gmail.com' });
-    if (!adminExists) {
-      const admin = await User.create({
-        name: 'Admin User',
-        email: 'admin@gmail.com',
-        password: 'admin123',
-        role: 'admin',
-      });
-      console.log('✓ Default admin user created: admin@gmail.com / admin123');
-    } else {
-      console.log('✓ Admin user already exists');
-    }
-  } catch (error) {
-    console.error('Error seeding admin user:', error.message);
-  }
+// ─── Security ───────────────────────────────────────────────
+app.use(helmet());
+app.use(compression());
+
+// ─── Rate Limiting ──────────────────────────────────────────
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many requests, please try again later.' },
+});
+app.use('/api', limiter);
+
+// ─── CORS ───────────────────────────────────────────────────
+app.use(cors({
+  origin: [
+    process.env.FRONTEND_URL || 'http://localhost:5173',
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
+
+// ─── Body Parsing ───────────────────────────────────────────
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(cookieParser());
+
+// ─── Logging ────────────────────────────────────────────────
+if (process.env.NODE_ENV === 'development') app.use(morgan('dev'));
+
+// ─── Request Timeout (prevents hanging requests) ────────────
+app.use(requestTimeout(30000)); // 30 second max per request
+
+// ─── Routes ─────────────────────────────────────────────────
+app.use('/api', routes);
+
+// ─── Health Check ───────────────────────────────────────────
+app.get('/health', (req, res) => {
+  const mongoose = require('mongoose');
+  res.json({
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    db: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+    uptime: Math.floor(process.uptime()) + 's',
+    memory: Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + 'MB',
+  });
+});
+
+// ─── 404 ────────────────────────────────────────────────────
+app.use((req, res) => {
+  res.status(404).json({ success: false, message: `Route ${req.originalUrl} not found` });
+});
+
+// ─── Global Error Handler ───────────────────────────────────
+app.use(errorHandler);
+
+// ─── Unhandled Rejections (prevent silent freezes) ──────────
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('🔥 Unhandled Rejection at:', promise, 'reason:', reason);
+  // Don't exit — just log it. Exiting would kill all active requests.
+});
+
+process.on('uncaughtException', (error) => {
+  console.error('💥 Uncaught Exception:', error.message);
+  console.error(error.stack);
+  // For uncaught exceptions, graceful shutdown is needed
+  gracefulShutdown('uncaughtException');
+});
+
+// ─── Graceful Shutdown ──────────────────────────────────────
+const gracefulShutdown = (signal) => {
+  console.log(`\n📴 ${signal} received. Shutting down gracefully...`);
+  server.close(() => {
+    console.log('✅ HTTP server closed');
+    const mongoose = require('mongoose');
+    mongoose.connection.close(false, () => {
+      console.log('✅ MongoDB connection closed');
+      process.exit(0);
+    });
+    // Force exit after 10s if graceful shutdown hangs
+    setTimeout(() => {
+      console.error('⚠️  Forced shutdown after timeout');
+      process.exit(1);
+    }, 10000);
+  });
 };
 
-// Run seed on startup
-seedDefaultAdmin();
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
-// Middleware
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
-  credentials: true,
-}));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// Health check route
-app.get('/api/health', (req, res) => {
-  res.status(200).json({ message: 'Server is running' });
-});
-
-// API Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/products', productRoutes);
-app.use('/api/cart', cartRoutes);
-app.use('/api/wishlist', wishlistRoutes);
-app.use('/api/orders', orderRoutes);
-app.use('/api/testimonials', testimonialRoutes);
-app.use('/api/admin/users', userRoutes);
-
-// 404 handler
-app.use((req, res) => {
-  res.status(404).json({ message: 'Route not found' });
-});
-
-// Error handler
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ message: 'Internal server error', error: err.message });
-});
-
-// Start server
+// ─── Start ──────────────────────────────────────────────────
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+const server = app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
 });
+
+// Socket timeout — prevents idle TCP connections from hanging
+server.keepAliveTimeout = 65000;
+server.headersTimeout = 66000;
+// Increase max listeners to avoid memory leak warnings
+server.setMaxListeners(0);
+
+module.exports = app;

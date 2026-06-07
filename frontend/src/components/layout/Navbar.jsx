@@ -1,318 +1,188 @@
-import { useState, useEffect, useRef } from "react";
-import {
-  FaShoppingCart,
-  FaBars,
-  FaTimes,
-  FaUserCircle,
-  FaStore,
-  FaTruck,
-  FaClipboardList,
-  FaHeart,
-  FaUserCog,
-  FaSignOutAlt,
-  FaSignInAlt,
-  FaUserPlus,
-} from "react-icons/fa";
-import { Link, useNavigate, useLocation } from "react-router-dom";
-import navigation from "../../data/navigation";
-import useAuth from "../../hooks/useAuth";
-import useCart from "../../hooks/useCart";
+import { useState, useEffect, useRef } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { ShoppingCart, Heart, Search, User, Menu, X, ChevronDown, Package, LogOut, Settings, Bell } from 'lucide-react';
+import useAuthStore from '../../store/authStore';
+import useCartStore from '../../store/cartStore';
+import { getInitials } from '../../utils/helpers';
 
-const roleNavigation = {
-  customer: [
-    { label: "Products", path: "/products", icon: FaStore },
-    { label: "Cart", path: "/cart", icon: FaShoppingCart },
-    { label: "My Orders", path: "/my-orders", icon: FaClipboardList },
-    { label: "Wishlist", path: "/wishlist", icon: FaHeart },
-    { label: "Profile", path: "/profile", icon: FaUserCircle },
-  ],
-  delivery: [
-    { label: "Delivery", path: "/delivery", icon: FaTruck },
-    { label: "Profile", path: "/profile", icon: FaUserCircle },
-  ],
-  admin: [
-    { label: "Products", path: "/admin/products", icon: FaStore },
-    { label: "Orders", path: "/admin/orders", icon: FaClipboardList },
-    { label: "Drivers", path: "/admin/drivers", icon: FaTruck },
-    { label: "Profile", path: "/profile", icon: FaUserCog },
-  ],
-};
-
-const Navbar = () => {
-  const [mobileMenu, setMobileMenu] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
-  const [activeDropdown, setActiveDropdown] = useState(null);
-  const mobileMenuRef = useRef(null);
-  const location = useLocation();
+export default function Navbar() {
+  const { user, isAuthenticated, logout } = useAuthStore();
+  const { itemCount, fetchCart } = useCartStore();
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
-  const { cartItems, setCartOpen } = useCart();
+  const location = useLocation();
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [scrolled, setScrolled] = useState(false);
+  const userMenuRef = useRef(null);
 
   useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    if (isAuthenticated && user?.role === 'customer') fetchCart();
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', onScroll);
+    return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  // Close mobile menu on route change
   useEffect(() => {
-    setMobileMenu(false);
-  }, [location.pathname]);
-
-  // Close mobile menu on escape key
-  useEffect(() => {
-    const handleEscape = (e) => {
-      if (e.key === "Escape" && mobileMenu) {
-        setMobileMenu(false);
-      }
+    const handleClick = (e) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target)) setUserMenuOpen(false);
     };
-    document.addEventListener("keydown", handleEscape);
-    return () => document.removeEventListener("keydown", handleEscape);
-  }, [mobileMenu]);
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
 
-  const navigationItems = user
-    ? roleNavigation[user.role] || roleNavigation.customer
-    : navigation;
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) navigate(`/shop?search=${encodeURIComponent(searchQuery.trim())}`);
+  };
 
-  const totalItems = cartItems.reduce((acc, item) => acc + item.quantity, 0);
+  const handleLogout = async () => {
+    await logout();
+    navigate('/');
+  };
 
-  const isActive = (path) => location.pathname === path;
+  const navLinks = [
+    { label: 'Home', path: '/' },
+    { label: 'Shop', path: '/shop' },
+    { label: 'Categories', path: '/categories' },
+    { label: 'Deals', path: '/shop?featured=true' },
+  ];
 
   return (
-    <>
-      <nav
-        className={`fixed top-0 z-50 w-full transition-all duration-300 ${
-          scrolled
-            ? "border-b border-yellow-200 bg-white/95 shadow-lg backdrop-blur-xl"
-            : "border-b border-yellow-100 bg-white/90 backdrop-blur-lg"
-        }`}
-      >
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
-          {/* LOGO with hover animation */}
-          <Link
-            to="/"
-            className="group relative text-2xl sm:text-3xl font-bold transition-all duration-300"
-          >
-            <span className="bg-gradient-to-r from-yellow-700 to-yellow-800 bg-clip-text text-transparent">
-              Vijay Cashews
-            </span>
-            <span className="absolute -bottom-1 left-0 h-0.5 w-0 bg-gradient-to-r from-yellow-600 to-yellow-800 transition-all duration-300 group-hover:w-full"></span>
+    <header className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${scrolled ? 'bg-white shadow-md' : 'bg-white/95 backdrop-blur-sm'}`}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        {/* Main Bar */}
+        <div className="flex items-center justify-between h-16 gap-4">
+          {/* Logo */}
+          <Link to="/" className="flex items-center gap-2 shrink-0">
+            <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-primary-700 rounded-xl flex items-center justify-center">
+              <span className="text-white font-display font-black text-sm">S</span>
+            </div>
+            <span className="font-display font-bold text-xl text-gray-900 hidden sm:block">ShopEase</span>
           </Link>
 
-          {/* DESKTOP MENU */}
-          <div className="hidden items-center gap-1 lg:gap-2 md:flex">
-            {navigationItems.map((item) => {
-              const Icon = item.icon;
-              const active = isActive(item.path);
-              return (
-                <Link
-                  key={item.label}
-                  to={item.path}
-                  className={`relative flex items-center gap-2 rounded-lg px-3 py-2 font-medium transition-all duration-200 ${
-                    active
-                      ? "bg-yellow-50 text-yellow-800"
-                      : "text-gray-700 hover:bg-yellow-50/50 hover:text-yellow-700"
-                  }`}
-                >
-                  {Icon && <Icon className="text-sm sm:text-base" />}
-                  <span>{item.label}</span>
-                  {active && (
-                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-yellow-600 rounded-full"></span>
+          {/* Nav Links - Desktop */}
+          <nav className="hidden lg:flex items-center gap-1">
+            {navLinks.map((link) => (
+              <Link key={link.path} to={link.path}
+                className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${location.pathname === link.path ? 'text-primary-600 bg-primary-50' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'}`}>
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+
+          {/* Search Bar */}
+          <form onSubmit={handleSearch} className="flex-1 max-w-md hidden md:flex">
+            <div className="relative w-full">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search products..."
+                className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none bg-gray-50 focus:bg-white transition-all" />
+            </div>
+          </form>
+
+          {/* Right Actions */}
+          <div className="flex items-center gap-1">
+            {isAuthenticated && user?.role === 'customer' && (
+              <>
+                <Link to="/wishlist" className="relative p-2 hover:bg-gray-100 rounded-xl transition-colors">
+                  <Heart className="w-5 h-5 text-gray-600" />
+                </Link>
+                <Link to="/cart" className="relative p-2 hover:bg-gray-100 rounded-xl transition-colors">
+                  <ShoppingCart className="w-5 h-5 text-gray-600" />
+                  {itemCount > 0 && (
+                    <span className="absolute top-0.5 right-0.5 w-4 h-4 bg-primary-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                      {itemCount > 9 ? '9+' : itemCount}
+                    </span>
                   )}
                 </Link>
-              );
-            })}
+              </>
+            )}
 
-            {/* User Menu */}
-            {user ? (
-              <div className="relative ml-2">
-                <button
-                  onClick={() =>
-                    setActiveDropdown(activeDropdown === "user" ? null : "user")
-                  }
-                  className="flex items-center gap-2 rounded-lg px-3 py-2 font-medium text-gray-700 transition-all hover:bg-yellow-50/50 hover:text-yellow-700"
-                >
-                  <FaUserCircle className="text-xl" />
-                  <span className="max-w-[120px] truncate">
-                    Hi, {user.name || user.email?.split("@")[0]}
-                  </span>
+            {isAuthenticated ? (
+              <div className="relative" ref={userMenuRef}>
+                <button onClick={() => setUserMenuOpen(!userMenuOpen)}
+                  className="flex items-center gap-2 p-1.5 hover:bg-gray-100 rounded-xl transition-colors">
+                  {user?.avatar ? (
+                    <img src={user.avatar} alt={user.name} className="w-8 h-8 rounded-full object-cover" />
+                  ) : (
+                    <div className="w-8 h-8 bg-primary-100 text-primary-700 rounded-full flex items-center justify-center text-xs font-bold">
+                      {getInitials(user?.name)}
+                    </div>
+                  )}
+                  <ChevronDown className={`w-3 h-3 text-gray-500 transition-transform hidden sm:block ${userMenuOpen ? 'rotate-180' : ''}`} />
                 </button>
 
-                {activeDropdown === "user" && (
-                  <div className="absolute right-0 mt-2 w-48 origin-top-right rounded-xl border border-gray-100 bg-white shadow-xl ring-1 ring-black/5">
-                    <div className="p-1">
-                      <button
-                        onClick={() => {
-                          logout();
-                          navigate("/");
-                          setActiveDropdown(null);
-                        }}
-                        className="flex w-full items-center gap-3 rounded-lg px-4 py-2.5 text-sm text-red-600 transition-colors hover:bg-red-50"
-                      >
-                        <FaSignOutAlt />
-                        <span>Logout</span>
-                      </button>
+                {userMenuOpen && (
+                  <div className="absolute right-0 top-12 w-52 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 animate-slide-down z-50">
+                    <div className="px-4 py-2 border-b border-gray-100">
+                      <p className="font-semibold text-sm text-gray-900 truncate">{user?.name}</p>
+                      <p className="text-xs text-gray-500 truncate">{user?.email}</p>
                     </div>
+                    {user?.role === 'customer' && (
+                      <>
+                        <Link to="/account" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 text-sm text-gray-700 transition-colors">
+                          <User className="w-4 h-4" /> My Account
+                        </Link>
+                        <Link to="/orders" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 text-sm text-gray-700 transition-colors">
+                          <Package className="w-4 h-4" /> My Orders
+                        </Link>
+                      </>
+                    )}
+                    {user?.role === 'admin' && (
+                      <Link to="/admin" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 text-sm text-gray-700 transition-colors">
+                        <Settings className="w-4 h-4" /> Admin Panel
+                      </Link>
+                    )}
+                    {user?.role === 'deliveryman' && (
+                      <Link to="/delivery" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 text-sm text-gray-700 transition-colors">
+                        <Package className="w-4 h-4" /> My Deliveries
+                      </Link>
+                    )}
+                    <hr className="my-1 border-gray-100" />
+                    <button onClick={handleLogout} className="flex items-center gap-3 px-4 py-2.5 hover:bg-red-50 text-sm text-red-600 transition-colors w-full">
+                      <LogOut className="w-4 h-4" /> Sign Out
+                    </button>
                   </div>
                 )}
               </div>
             ) : (
-              <div className="flex items-center gap-1 ml-2">
-                <Link
-                  to="/login"
-                  className="flex items-center gap-2 rounded-lg px-3 py-2 font-medium text-gray-700 transition-all hover:bg-yellow-50/50 hover:text-yellow-700"
-                >
-                  <FaSignInAlt />
-                  <span>Login</span>
-                </Link>
-                <Link
-                  to="/register"
-                  className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-yellow-600 to-yellow-700 px-4 py-2 font-medium text-white shadow-md transition-all hover:shadow-lg hover:from-yellow-700 hover:to-yellow-800"
-                >
-                  <FaUserPlus />
-                  <span>Register</span>
-                </Link>
+              <div className="flex items-center gap-2">
+                <Link to="/login" className="px-4 py-2 text-sm font-semibold text-gray-700 hover:text-gray-900 transition-colors hidden sm:block">Sign In</Link>
+                <Link to="/register" className="px-4 py-2 text-sm font-semibold bg-primary-600 hover:bg-primary-700 text-white rounded-xl transition-colors">Sign Up</Link>
               </div>
             )}
-          </div>
 
-          {/* RIGHT SECTION - Cart & Mobile Menu */}
-          <div className="flex items-center gap-2 sm:gap-4">
-            {user && user.role === "customer" && (
-              <button
-                onClick={() => setCartOpen(true)}
-                className="group relative rounded-full p-2 transition-all duration-200 hover:bg-yellow-50"
-                aria-label="Shopping cart"
-              >
-                <FaShoppingCart className="text-xl sm:text-2xl text-gray-700 transition-transform group-hover:scale-110" />
-                {totalItems > 0 && (
-                  <span className="absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-gradient-to-r from-red-500 to-red-600 px-1.5 text-xs font-bold text-white shadow-md animate-pulse">
-                    {totalItems > 99 ? "99+" : totalItems}
-                  </span>
-                )}
-              </button>
-            )}
-
-            {/* MOBILE MENU BUTTON */}
-            <button
-              className="relative h-10 w-10 rounded-lg text-2xl text-gray-700 transition-all hover:bg-yellow-50 md:hidden"
-              onClick={() => setMobileMenu(!mobileMenu)}
-              aria-label={mobileMenu ? "Close menu" : "Open menu"}
-              aria-expanded={mobileMenu}
-            >
-              {mobileMenu ? <FaTimes className="mx-auto" /> : <FaBars className="mx-auto" />}
+            {/* Mobile Menu Button */}
+            <button onClick={() => setMobileOpen(!mobileOpen)} className="lg:hidden p-2 hover:bg-gray-100 rounded-xl transition-colors ml-1">
+              {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
           </div>
         </div>
-      </nav>
 
-      {/* MOBILE MENU OVERLAY */}
-      {mobileMenu && (
-        <>
-          {/* Backdrop */}
-          <div
-            className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm transition-opacity duration-300 md:hidden"
-            onClick={() => setMobileMenu(false)}
-          />
-          
-          {/* Menu Panel */}
-          <div
-            ref={mobileMenuRef}
-            className="fixed right-0 top-0 z-50 h-full w-80 max-w-[85vw] bg-white shadow-2xl md:hidden animate-slide-in-right"
-          >
-            {/* Mobile Menu Header */}
-            <div className="flex items-center justify-between border-b border-gray-100 p-4">
-              <span className="text-xl font-bold text-yellow-800">Menu</span>
-              <button
-                onClick={() => setMobileMenu(false)}
-                className="rounded-lg p-2 text-gray-600 hover:bg-gray-100"
-                aria-label="Close menu"
-              >
-                <FaTimes className="text-xl" />
-              </button>
-            </div>
-
-            {/* User Info (if logged in) */}
-            {user && (
-              <div className="border-b border-gray-100 bg-gradient-to-r from-yellow-50 to-white p-4">
-                <div className="flex items-center gap-3">
-                  <FaUserCircle className="text-3xl text-yellow-700" />
-                  <div>
-                    <p className="font-semibold text-gray-800">{user.name || "User"}</p>
-                    <p className="text-sm text-gray-500">{user.email}</p>
-                    <span className="mt-1 inline-block rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-800 capitalize">
-                      {user.role}
-                    </span>
-                  </div>
-                </div>
+        {/* Mobile Menu */}
+        {mobileOpen && (
+          <div className="lg:hidden border-t border-gray-100 py-4 space-y-1 animate-slide-down">
+            <form onSubmit={handleSearch} className="px-2 mb-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search products..."
+                  className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary-500 outline-none bg-gray-50" />
               </div>
-            )}
-
-            {/* Navigation Links */}
-            <div className="flex flex-col p-2">
-              {navigationItems.map((item) => {
-                const Icon = item.icon;
-                const active = isActive(item.path);
-                return (
-                  <Link
-                    key={item.label}
-                    to={item.path}
-                    className={`flex items-center gap-3 rounded-xl px-4 py-3 text-base font-medium transition-all ${
-                      active
-                        ? "bg-yellow-50 text-yellow-800"
-                        : "text-gray-700 hover:bg-gray-50"
-                    }`}
-                  >
-                    {Icon && <Icon className="text-lg" />}
-                    <span>{item.label}</span>
-                    {active && (
-                      <span className="ml-auto h-2 w-2 rounded-full bg-yellow-600"></span>
-                    )}
-                  </Link>
-                );
-              })}
-            </div>
-
-            {/* Auth Actions */}
-            <div className="border-t border-gray-100 p-4 mt-auto">
-              {user ? (
-                <button
-                  onClick={() => {
-                    logout();
-                    setMobileMenu(false);
-                    navigate("/");
-                  }}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-red-50 px-4 py-3 font-medium text-red-600 transition-all hover:bg-red-100"
-                >
-                  <FaSignOutAlt />
-                  <span>Logout</span>
-                </button>
-              ) : (
-                <div className="flex flex-col gap-2">
-                  <Link
-                    to="/login"
-                    className="flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 px-4 py-3 font-medium text-gray-700 transition-all hover:bg-gray-50"
-                  >
-                    <FaSignInAlt />
-                    <span>Login</span>
-                  </Link>
-                  <Link
-                    to="/register"
-                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-yellow-600 to-yellow-700 px-4 py-3 font-medium text-white shadow-md transition-all hover:shadow-lg"
-                  >
-                    <FaUserPlus />
-                    <span>Register</span>
-                  </Link>
-                </div>
-              )}
-            </div>
+            </form>
+            {navLinks.map((link) => (
+              <Link key={link.path} to={link.path} onClick={() => setMobileOpen(false)}
+                className="block px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-xl transition-colors">
+                {link.label}
+              </Link>
+            ))}
           </div>
-        </>
-      )}
-    </>
+        )}
+      </div>
+    </header>
   );
-};
-
-export default Navbar;
+}

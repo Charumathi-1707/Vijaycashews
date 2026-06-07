@@ -1,188 +1,211 @@
-import Product from '../models/Product.js';
-import cloudinary from '../config/cloudinary.js';
+const Product = require('../models/Product');
+const Category = require('../models/Category');
+const { cloudinary } = require('../config/cloudinary');
 
-// Get all products
-export const getAllProducts = async (req, res) => {
+// @desc    Get all products with filtering, sorting, pagination
+exports.getProducts = async (req, res, next) => {
   try {
-    const { category, search, sort } = req.query;
+    const { search, category, minPrice, maxPrice, sort, page = 1, limit = 12, featured, brand } = req.query;
+
     let query = { isActive: true };
 
+    if (search) {
+      query.$text = { $search: search };
+    }
     if (category) {
       query.category = category;
     }
-
-    if (search) {
-      query.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } },
-      ];
+    if (minPrice || maxPrice) {
+      query.price = {};
+      if (minPrice) query.price.$gte = Number(minPrice);
+      if (maxPrice) query.price.$lte = Number(maxPrice);
     }
+    if (featured) query.isFeatured = true;
+    if (brand) query.brand = { $regex: brand, $options: 'i' };
 
-    let products = Product.find(query);
+    let sortOption = { createdAt: -1 };
+    if (sort === 'price_asc') sortOption = { price: 1 };
+    else if (sort === 'price_desc') sortOption = { price: -1 };
+    else if (sort === 'rating') sortOption = { rating: -1 };
+    else if (sort === 'popular') sortOption = { sold: -1 };
 
-    if (sort === 'price-asc') {
-      products = products.sort({ price: 1 });
-    } else if (sort === 'price-desc') {
-      products = products.sort({ price: -1 });
-    } else {
-      products = products.sort({ createdAt: -1 });
-    }
+    const skip = (Number(page) - 1) * Number(limit);
+    const total = await Product.countDocuments(query);
+    const products = await Product.find(query)
+      .populate('category', 'name slug')
+      .sort(sortOption)
+      .skip(skip)
+      .limit(Number(limit));
 
-    const result = await products.exec();
-    res.status(200).json({ products: result });
+    res.json({
+      success: true,
+      products,
+      pagination: {
+        total,
+        page: Number(page),
+        pages: Math.ceil(total / Number(limit)),
+        limit: Number(limit),
+      },
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-// Get product by id
-export const getProductById = async (req, res) => {
+// @desc    Get single product
+exports.getProduct = async (req, res, next) => {
+  try {
+    const product = await Product.findOne({ 
+      $or: [{ _id: req.params.id }, { slug: req.params.id }],
+      isActive: true 
+    }).populate('category', 'name slug').populate('reviews.user', 'name avatar');
+
+    if (!product) return res.status(404).json({ success: false, message: 'Product not found' });
+    res.json({ success: true, product });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Create product (Admin)
+exports.createProduct = async (req, res, next) => {
+  try {
+    const data = { ...req.body };
+    
+    // Generate slug
+    data.slug = data.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '-' + Date.now();
+
+    if (data.discountPrice && data.price) {
+      data.discountPercent = Math.round(((data.price - data.discountPrice) / data.price) * 100);
+    }
+
+    if (req.files && req.files.length > 0) {
+      data.images = req.files.map(f => ({ url: f.path, publicId: f.filename }));
+    }
+
+    if (data.variants && typeof data.variants === 'string') {
+      data.variants = JSON.parse(data.variants);
+    }
+    if (data.tags && typeof data.tags === 'string') {
+      data.tags = data.tags.split(',').map(t => t.trim());
+    }
+
+    const product = await Product.create(data);
+    res.status(201).json({ success: true, product });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Update product (Admin)
+exports.updateProduct = async (req, res, next) => {
+  try {
+    const data = { ...req.body };
+
+    if (data.discountPrice && data.price) {
+      data.discountPercent = Math.round(((data.price - data.discountPrice) / data.price) * 100);
+    }
+
+    if (req.files && req.files.length > 0) {
+      const newImages = req.files.map(f => ({ url: f.path, publicId: f.filename }));
+      const existing = await Product.findById(req.params.id);
+      data.images = [...(existing.images || []), ...newImages];
+    }
+
+    if (data.variants && typeof data.variants === 'string') {
+      data.variants = JSON.parse(data.variants);
+    }
+    if (data.tags && typeof data.tags === 'string') {
+      data.tags = data.tags.split(',').map(t => t.trim());
+    }
+
+    const product = await Product.findByIdAndUpdate(req.params.id, data, { new: true, runValidators: true });
+    if (!product) return res.status(404).json({ success: false, message: 'Product not found' });
+    res.json({ success: true, product });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Delete product image
+exports.deleteProductImage = async (req, res, next) => {
+  try {
+    const { publicId } = req.body;
+    await cloudinary.uploader.destroy(publicId);
+    const product = await Product.findByIdAndUpdate(
+      req.params.id,
+      { $pull: { images: { publicId } } },
+      { new: true }
+    );
+    res.json({ success: true, product });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Delete product (Admin)
+exports.deleteProduct = async (req, res, next) => {
   try {
     const product = await Product.findById(req.params.id);
+    if (!product) return res.status(404).json({ success: false, message: 'Product not found' });
 
-    if (!product) {
-      return res.status(404).json({ message: 'Product not found' });
+    // Delete images from cloudinary
+    for (const img of product.images) {
+      if (img.publicId) await cloudinary.uploader.destroy(img.publicId);
     }
 
-    res.status(200).json({ product });
+    await product.deleteOne();
+    res.json({ success: true, message: 'Product deleted' });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-// Create product (Admin only)
-export const createProduct = async (req, res) => {
-  try {
-    const { name, description, price, originalPrice, category, image, imagePublicId, images, stock } = req.body;
-
-    const product = await Product.create({
-      name,
-      description,
-      price,
-      originalPrice,
-      category,
-      image,
-      imagePublicId,
-      images,
-      stock,
-    });
-
-    res.status(201).json({
-      message: 'Product created successfully',
-      product,
-    });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-// Update product (Admin only)
-export const updateProduct = async (req, res) => {
-  try {
-    const product = await Product.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-    });
-
-    if (!product) {
-      return res.status(404).json({ message: 'Product not found' });
-    }
-
-    res.status(200).json({
-      message: 'Product updated successfully',
-      product,
-    });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-const getCloudinaryPublicIdFromUrl = (url) => {
-  if (!url) return null;
-
-  try {
-    const parsedUrl = new URL(url);
-    const match = parsedUrl.pathname.match(/\/image\/upload\/(?:v\d+\/)?(.+)\.[a-zA-Z0-9]+$/);
-    return match ? match[1] : null;
-  } catch (error) {
-    return null;
-  }
-};
-
-// Delete product (Admin only)
-export const deleteProduct = async (req, res) => {
-  try {
-    const product = await Product.findById(req.params.id);
-
-    if (!product) {
-      return res.status(404).json({ message: 'Product not found' });
-    }
-
-    const publicId = product.imagePublicId || getCloudinaryPublicIdFromUrl(product.image);
-
-    if (publicId) {
-      try {
-        await cloudinary.uploader.destroy(publicId, { invalidate: true });
-      } catch (cloudinaryError) {
-        console.error('Cloudinary delete error:', cloudinaryError);
-      }
-    }
-
-    product.isActive = false;
-    await product.save();
-
-    res.status(200).json({ message: 'Product deleted successfully' });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-// Upload product image to Cloudinary
-export const uploadProductImage = async (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ message: 'No image file provided' });
-    }
-
-    const fileData = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
-    const result = await cloudinary.uploader.upload(fileData, {
-      folder: 'vijay-cashews/products',
-      transformation: [{ width: 1200, crop: 'limit' }],
-    });
-
-    res.status(200).json({ url: result.secure_url, publicId: result.public_id });
-  } catch (error) {
-    console.error('Cloudinary upload error:', error);
-    res.status(500).json({ message: 'Unable to upload image' });
-  }
-};
-
-// Add product review
-export const addReview = async (req, res) => {
+// @desc    Add review
+exports.addReview = async (req, res, next) => {
   try {
     const { rating, comment } = req.body;
     const product = await Product.findById(req.params.id);
+    if (!product) return res.status(404).json({ success: false, message: 'Product not found' });
 
-    if (!product) {
-      return res.status(404).json({ message: 'Product not found' });
-    }
+    const already = product.reviews.find(r => r.user.toString() === req.user._id.toString());
+    if (already) return res.status(400).json({ success: false, message: 'Already reviewed' });
 
     const review = {
-      userId: req.userId,
-      name: req.userName || req.body.name || 'Anonymous',
-      rating: Number(rating) || 0,
+      user: req.user._id,
+      name: req.user.name,
+      rating: Number(rating),
       comment,
+      images: req.files ? req.files.map(f => ({ url: f.path, publicId: f.filename })) : [],
     };
 
     product.reviews.push(review);
-    product.rating = product.reviews.reduce((sum, rev) => sum + rev.rating, 0) / product.reviews.length;
-
+    product.numReviews = product.reviews.length;
+    product.rating = product.reviews.reduce((acc, r) => acc + r.rating, 0) / product.reviews.length;
     await product.save();
 
-    res.status(201).json({
-      message: 'Review added successfully',
-      product,
-    });
+    res.status(201).json({ success: true, message: 'Review added' });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
+  }
+};
+
+// @desc    Get all products for admin
+exports.getAdminProducts = async (req, res, next) => {
+  try {
+    const { search, page = 1, limit = 20 } = req.query;
+    let query = {};
+    if (search) query.$text = { $search: search };
+    
+    const total = await Product.countDocuments(query);
+    const products = await Product.find(query)
+      .populate('category', 'name')
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(Number(limit));
+
+    res.json({ success: true, products, total, pages: Math.ceil(total / limit) });
+  } catch (error) {
+    next(error);
   }
 };
