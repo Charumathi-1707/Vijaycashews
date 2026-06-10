@@ -42,6 +42,35 @@ export const useRazorpay = () => {
           contact: user?.phone || '',
         },
         theme: { color: '#ea580c' },
+
+        // ─── FIX: Explicitly enable UPI on mobile ──────────────────────────
+        // Without this, Razorpay hides UPI on mobile browsers because it can't
+        // auto-detect intent flow. We force all three flows: intent (opens GPay/
+        // PhonePe/Paytm), collect (type VPA), and qr (scan to pay).
+        config: {
+          display: {
+            blocks: {
+              upi: {
+                name: 'Pay via UPI',
+                instruments: [
+                  { method: 'upi', flows: ['intent', 'collect', 'qr'] },
+                ],
+              },
+              other: {
+                name: 'Other Methods',
+                instruments: [
+                  { method: 'card' },
+                  { method: 'netbanking' },
+                  { method: 'wallet' },
+                ],
+              },
+            },
+            sequence: ['block.upi', 'block.other'],
+            preferences: { show_default_blocks: false },
+          },
+        },
+        // ───────────────────────────────────────────────────────────────────
+
         modal: {
           ondismiss: () => {
             toast('Payment cancelled', { icon: '⚠️' });
