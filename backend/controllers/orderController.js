@@ -72,7 +72,9 @@ exports.createOrder = async (req, res, next) => {
       shippingAddress,
       pricing: { subtotal, shippingCost, discount, tax, total },
       coupon: couponData,
-      payment: { method: payment?.method || 'cod', status: payment?.method === 'cod' ? 'pending' : 'paid' },
+      // FIX: All orders start as 'pending'. Only verifyPayment promotes to 'paid'.
+      // Previously, non-COD orders were incorrectly marked 'paid' before payment happened.
+      payment: { method: payment?.method || 'cod', status: 'pending' },
       notes,
       statusHistory: [{ status: 'pending', message: 'Order placed successfully', updatedBy: req.user._id }],
     });

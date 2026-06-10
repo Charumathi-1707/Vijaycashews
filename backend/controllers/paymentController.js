@@ -55,14 +55,45 @@ exports.verifyPayment = async (req, res, next) => {
       .update(body)
       .digest('hex');
 
+    // FIX: On signature mismatch, mark the order as failed so it doesn't sit
+    // as a ghost 'pending' order, and return the orderId so the frontend can
+    // show a specific "retry payment" message instead of silently redirecting.
     if (expectedSignature !== razorpay_signature) {
-      return res.status(400).json({ success: false, message: 'Payment verification failed — invalid signature' });
+      await Order.findByIdAndUpdate(orderId, {
+        'payment.status': 'failed',
+        $push: {
+          statusHistory: {
+            status: 'pending',
+            message: 'Payment failed — invalid signature received from Razorpay',
+          },
+        },
+      });
+      return res.status(400).json({
+        success: false,
+        message: 'Payment verification failed. Your order has been saved but not confirmed — please retry payment or contact support.',
+        orderId,
+      });
     }
 
     // Step 2: Fetch payment details from Razorpay to double-check amount
     const payment = await razorpay.payments.fetch(razorpay_payment_id);
+
+    // FIX: On capture failure, also mark the order as failed with a clear reason.
     if (payment.status !== 'captured') {
-      return res.status(400).json({ success: false, message: `Payment not captured. Status: ${payment.status}` });
+      await Order.findByIdAndUpdate(orderId, {
+        'payment.status': 'failed',
+        $push: {
+          statusHistory: {
+            status: 'pending',
+            message: `Payment not captured by Razorpay. Status returned: ${payment.status}`,
+          },
+        },
+      });
+      return res.status(400).json({
+        success: false,
+        message: `Payment was not completed (status: ${payment.status}). Your order is saved — please retry payment or contact support.`,
+        orderId,
+      });
     }
 
     // Step 3: Update our order
